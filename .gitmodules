@@ -1,0 +1,3 @@
+[submodule "Code/Generator/deep_hyperlink_prediction"]
+	path = Code/Generator/deep_hyperlink_prediction
+	url = https://github.com/daqh/deep_hyperlink_prediction
