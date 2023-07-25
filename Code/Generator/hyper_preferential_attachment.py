@@ -5,6 +5,11 @@
 
 ### Hyper-graph generator based on preferential attachment:
 
+import torch
+from deep_hyperlink_prediction.models.node2vec_slp import Node2VecSLP
+
+node2vec_slp = Node2VecSLP(torch.tensor([[1, 2, 3], [3, 2, 1]]), 128, 1, aggregate='sum')
+
 import numpy as np
 import random
 import math
@@ -12,6 +17,9 @@ import math
 from itertools import combinations
 import argparse
 
+import logging
+
+from datetime import datetime
 
 ### IMPORTANT
 # Nodes are numbers from 1,2...
@@ -153,6 +161,7 @@ class hyper_preferential_attachment:
                 # 'chosen_group' is the index of our chosen_group, not the group itself
                 chosen_group = np.random.choice(a=len(self.deg_list[number - 2]), size=1, replace=False,
                                             p=probability)  # don't be confused here, we only choose 1 group, which is a simplex
+                
                 index_chosen_group = chosen_group[0]
                 i = 0
                 chosen_group_of_nodes = ""
@@ -237,6 +246,7 @@ class hyper_preferential_attachment:
         # learn size distribution
         size_distribution = self.learn_size_distribution()
 
+
         # learn distirbution of number of simplicer per new node
         maximum_number, distribution = self.learn_number_simplices_per_node()
 
@@ -249,7 +259,7 @@ class hyper_preferential_attachment:
             self.degrees[i] = 1
         # write into file and update "degree" of edge
         for i in range(12):
-            f.write(str(i + 1) + " " + str(24-i) + "\n")
+            f.write("a" + str(i + 1) + " a" + str(24-i) + "\n")
             self.deg_list[0][str(i+1) + "," + str(24-i)] = 1
         # update degree in deg_list
         # From node 26-th onward, we will generate simplices based on preferential attachment
@@ -258,6 +268,8 @@ class hyper_preferential_attachment:
 
 
         for node in range(25, self.num_nodes+1):
+            logging.info(f"node {node}/{self.num_nodes}")
+            # Print a progress bar
             hyper_edges = []
 
             if self.type == 'deterministic':
@@ -276,7 +288,7 @@ class hyper_preferential_attachment:
                 # if new simplex has size only 1
                 if simplex_size == 1:
                     #self.degrees[node - 1] += 1                                                     # corresponding index of 'node' is 'node-1'
-                    f.write(str(node) + "\n")                                                       # but when writing into a file, must be 'node'
+                    f.write(str(node) + "b" + str(node) + "\n")                                                       # but when writing into a file, must be 'node'
                 # since simplices of size 1 generally do not affect our proposed properties, we want to form simplices of size at least 2 to see the properties
 
                     hyper_edge = []
@@ -299,7 +311,7 @@ class hyper_preferential_attachment:
                         # Increment the degree of each node in our new simplex by 1, write this newly formed hyper-edge into our file
                         for t in hyper_edge:
                             #self.degrees[t] += 1
-                            f.write(str(t+1) + " ")
+                            f.write(str(node) + "c" + str(t+1) + " ")
                         f.write("\n")
 
 
@@ -330,7 +342,7 @@ class hyper_preferential_attachment:
                             for t in hyper_edge:                                                             # in here, t is the corresponding index of the node 't+1'
                                 #self.degrees[t] += 1                                                          # so when using index, use 't'
                                 # write this newly formed hyper-edge into our file
-                                f.write(str(t+1) + " ")                                                       # but when writing into file, must write 't+1'
+                                f.write(str(node) + "d" + str(t+1) + " ")                                                       # but when writing into file, must write 't+1'
                             f.write("\n")
                             hyper_edge = np.array(hyper_edge) + 1
                             hyper_edges.append(hyper_edge)
@@ -357,7 +369,7 @@ class hyper_preferential_attachment:
                                 for t in hyper_edge:  # in here, t is the corresponding index of the node 't+1'
                                     #self.degrees[t] += 1  # so when using index, use 't'
                                     # write this newly formed hyper-edge into our file
-                                    f.write(str(t + 1) + " ")  # but when writing into file, must write 't+1'
+                                    f.write(str(node) + "e" + str(t + 1) + " ")  # but when writing into file, must write 't+1'
                                 f.write("\n")
                                 hyper_edge = np.array(hyper_edge) + 1
                                 hyper_edges.append(hyper_edge)
@@ -376,7 +388,7 @@ class hyper_preferential_attachment:
                                 for t in hyper_edge:  # in here, t is the number representing the node t
                                     #self.degrees[t - 1] += 1  # so when using index, use 't-1'
                                     # write this newly formed hyper-edge into our file
-                                    f.write(str(t) + " ")  # but when writing into file, must write 't'
+                                    f.write(str(node) + "f" + str(t) + " ")  # but when writing into file, must write 't'
                                 f.write("\n")
                                 hyper_edges.append(hyper_edge)
 
@@ -421,6 +433,9 @@ def arg_parse():
 
 
 def main():
+    begin = datetime.now()
+    logging.basicConfig(level=logging.INFO)
+
     # Generating hyper-graphs with the same number of nodes and edges with the 16 realworld hypergraph datasets
 
     directory = ["DAWN", "email-Eu", "tags-ask-ubuntu", "tags-math"]
@@ -433,6 +448,9 @@ def main():
     generator = hyper_preferential_attachment(prog_args)
     generator.generate()
     print("done with " + str(prog_args.name))
+    
+    end = datetime.now()
+    print("time elapsed: " + str(end - begin))
 
 
 

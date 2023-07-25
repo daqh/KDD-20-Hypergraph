@@ -96,6 +96,8 @@ class SS():
         # keep introducing new nodes
         for node in range(49, self.num_nodes + 1):
 
+            print(f"{node}/{self.num_nodes}")
+
             # sample a number of new simplices formed by this new node
             sampled_number = np.random.choice(a=maximum_number + 1, size=1, replace=False, p=distribution)
             number_simplices = sampled_number[0]
