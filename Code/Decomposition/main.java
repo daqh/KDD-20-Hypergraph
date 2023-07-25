@@ -153,10 +153,14 @@ public class Main {
             while ((br_line = br.readLine()) != null) {
 
                 String[] hyper_edge = br_line.split(" ");
+                
                 // suitable for edge-level projection
 
                 if (hyper_edge.length >= 2 && hyper_edge.length <= 7){
                     String[] edgeLevelNodes = simplexStringToEdgeLevel(hyper_edge);
+                    for(String e : edgeLevelNodes) {
+                        System.out.println(e);
+                    }
                     for (int it = 0; it <= edgeLevelNodes.length - 1; it++ ){
                         int write_value;
                         if (edgeLevelLabel.get(edgeLevelNodes[it]) == null) {
