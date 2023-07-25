@@ -7,8 +7,11 @@
 
 import torch
 from deep_hyperlink_prediction.models.node2vec_slp import Node2VecSLP
+from deep_hyperlink_prediction.utils import load_dataset, datasets
 
-node2vec_slp = Node2VecSLP(torch.tensor([[1, 2, 3], [3, 2, 1]]), 128, 1, aggregate='sum')
+_, edge_index, _ = load_dataset(datasets['DAWN'])
+
+node2vec_slp = Node2VecSLP(edge_index, 256, 1, aggregate='sum').load_state_dict(torch.load('deep_hyperlink_prediction/pretrained_models/node2vec_slp-DAWN-sum.pt'))
 
 import numpy as np
 import random
@@ -28,6 +31,8 @@ class hyper_preferential_attachment:
 
     # a simple graph generator object of preferential attachment law
     def __init__(self, args):
+        self.a = args.a                                         # alpha is the awarness parameter
+        self.trials = args.trials                               # number of trials before choose a node based on its degree
         self.name = args.name                                   # a string, name of our hyper-graph, for now it must be name of 1 of 4 available hypergraph datasets
         self.k = args.k                                         # k in deterministic version
         self.randomness = args.randomness                       # level of randomness, between 0 and 1
@@ -308,6 +313,9 @@ class hyper_preferential_attachment:
                         hyper_edge = np.append(hyper_edge, node - 1)
                         hyper_edge.sort()
 
+                        for t in range(self.trials):
+                            print('c')
+
                         # Increment the degree of each node in our new simplex by 1, write this newly formed hyper-edge into our file
                         for t in hyper_edge:
                             #self.degrees[t] += 1
@@ -338,6 +346,10 @@ class hyper_preferential_attachment:
                             hyper_edge = np.append(hyper_edge, node - 1)
                             hyper_edge.sort()
 
+                            for t in range(self.trials):
+                                # print('d')
+                                pass
+
                             # Increment the degree of each node in our new simplex by 1
                             for t in hyper_edge:                                                             # in here, t is the corresponding index of the node 't+1'
                                 #self.degrees[t] += 1                                                          # so when using index, use 't'
@@ -365,6 +377,11 @@ class hyper_preferential_attachment:
                                 hyper_edge = chosen_nodes
                                 hyper_edge = np.append(hyper_edge, node - 1)
                                 hyper_edge.sort()
+
+                                for t in range(self.trials):
+                                    # print('e')
+                                    pass
+
                                 # Increment the degree of each node in our new simplex by 1 unit
                                 for t in hyper_edge:  # in here, t is the corresponding index of the node 't+1'
                                     #self.degrees[t] += 1  # so when using index, use 't'
@@ -411,6 +428,10 @@ def arg_parse():
     parser.add_argument('--type', dest='type', help='how number of hyperedges per new node is determined')
 
     parser.add_argument('--k', dest='k', type=int, help='k in the deterministic version')
+
+    parser.add_argument('-a', dest='a', type=float, help='alpha is the awarness parameter')
+
+    parser.add_argument('--trials', dest='trials', type=int, help='number of trials before choose a node based on its degree')
 
     # regarding input, output files
     parser.add_argument('--size_distribution_directory', dest='size_distribution_directory', help='directory containing the size distribution file')
