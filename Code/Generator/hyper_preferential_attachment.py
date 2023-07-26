@@ -313,9 +313,6 @@ class hyper_preferential_attachment:
                         hyper_edge = np.append(hyper_edge, node - 1)
                         hyper_edge.sort()
 
-                        for t in range(self.trials):
-                            print('c')
-
                         # Increment the degree of each node in our new simplex by 1, write this newly formed hyper-edge into our file
                         for t in hyper_edge:
                             #self.degrees[t] += 1
@@ -346,10 +343,6 @@ class hyper_preferential_attachment:
                             hyper_edge = np.append(hyper_edge, node - 1)
                             hyper_edge.sort()
 
-                            for t in range(self.trials):
-                                # print('d')
-                                pass
-
                             # Increment the degree of each node in our new simplex by 1
                             for t in hyper_edge:                                                             # in here, t is the corresponding index of the node 't+1'
                                 #self.degrees[t] += 1                                                          # so when using index, use 't'
@@ -378,9 +371,6 @@ class hyper_preferential_attachment:
                                 hyper_edge = np.append(hyper_edge, node - 1)
                                 hyper_edge.sort()
 
-                                for t in range(self.trials):
-                                    # print('e')
-                                    pass
 
                                 # Increment the degree of each node in our new simplex by 1 unit
                                 for t in hyper_edge:  # in here, t is the corresponding index of the node 't+1'
