@@ -10,6 +10,8 @@ import argparse
 import torch
 from deep_hyperlink_prediction.models.node2vec_slp import Node2VecSLP
 from deep_hyperlink_prediction.utils import datasets, load_dataset
+import logging
+from datetime import datetime
 import itertools
 
 def hyper_pa(S: list[int], NP: list[int], n: int, trials: int, alpha: float, model: torch.nn.Module):
@@ -31,23 +33,25 @@ def hyper_pa(S: list[int], NP: list[int], n: int, trials: int, alpha: float, mod
     G = nx.Graph()
     # Initialize G with s_max/2 disjoint hyperedges of size 2
     s_max = len(S)
-    for i in range(s_max//2 + 1):
+    for i in range((s_max//2)):
         G.add_node(i + 1, bipartite=1)
-        G.add_node(s_max - i, bipartite=1)
+        G.add_node(s_max - i - 1, bipartite=1)
         G.add_node(f'a{i + 1}', bipartite=0)
-        G.add_edges_from([(f'a{i + 1}', s_max - i)])
+        G.add_edges_from([(f'a{i + 1}', s_max - i - 1)])
         G.add_edges_from([(f'a{i + 1}', i + 1)])
 
     for i in  range(1, n + 1):
-        print(f'{i}/{n}')
+        logging.info(f'{i}/{n}')
         k = np.random.choice(a = len(NP), size = 1, replace=False, p = [x/sum(NP) for x in NP])[0] + 1 # Sample a number k from NP
-        print(f'\tk = {k}')
+        logging.debug(f'\tk = {k}')
         for j in range(1, k + 1):
             s = np.random.choice(a = len(S), size = 1, replace=False, p = [x/sum(S) for x in S])[0] + 1 # Sample a hyperedge size s from S
+            logging.debug(f'\ts = {s}')
             if s == 1:
+                logging.debug(f'\tAdding hyperedge {i}')
                 G.add_node(i, bipartite=1)
-                G.add_node(f'c{i}-{j}', bipartite=0)
-                G.add_edge(i, f'c{i}-{j}') # Add the hyperedge {i} to G
+                G.add_node(f'c{i}', bipartite=0)
+                G.add_edge(i, f'c{i}') # Add the hyperedge {i} to G
             # else if all (s-1)-sized groups have 0 degree then
             elif len({n for n, d in G.nodes(data=True) if d["bipartite"] == 1 and d != i}) < s - 1: # TODO: verifica correttezza
                 # ----------------- #
@@ -57,12 +61,12 @@ def hyper_pa(S: list[int], NP: list[int], n: int, trials: int, alpha: float, mod
                 #     print(torch.tensor(nodes))
                 # ----------------- #
                 # Choose s-1 nodes randomly
+                logging.debug(f'\tChoosing {s - 1} nodes randomly')
                 nodes = random.choices(range(1, n), k=s-1)
+                nodes.append(i)
                 # Add the hyperedge of i and the s-1 nodes to G
                 G.add_nodes_from(nodes, bipartite=1)
-                G.add_node(i, bipartite=1)
                 G.add_node(f'c{i}-{j}', bipartite=0)
-                G.add_edge(i, f'c{i}-{j}')
                 G.add_edges_from([(l, f'c{i}-{j}') for l in nodes])
             else:
                 # ----------------- #
@@ -88,37 +92,63 @@ def hyper_pa(S: list[int], NP: list[int], n: int, trials: int, alpha: float, mod
                 #     continue
                 # ----------------- #
                 # Choose a group of size s-1 with probability proportional to degree
+                logging.debug(f'\tChoosing a group of size {s - 1} with probability proportional to degree')
                 top_nodes = {n for n, d in G.nodes(data=True) if d["bipartite"] == 1 and d != i}
                 nodes = random.choices(list(top_nodes), weights=[G.degree[i] for i in top_nodes], k=s-1)
+                nodes.append(i)
                 # Add the hyperedge of i and the s-1 nodes to G
                 G.add_nodes_from(nodes, bipartite=1)
-                G.add_node(i, bipartite=1)
                 G.add_node(f'c{i}-{j}', bipartite=0)
-                G.add_edge(i, f'c{i}-{j}')
                 G.add_edges_from([(l, f'c{i}-{j}') for l in nodes])
     return G
 
 def main(args):
-    n = args.nodes
+    logging.basicConfig(level=logging.INFO)
+
+    nodes = args.nodes
     trials = args.trials
     alpha = args.alpha
     dataset = args.dataset
+
+    begin = datetime.now()
+
     with open(f"simplex per node/{dataset}-simplices-per-node-distribution.txt") as f:
         NP = [int(x) for x in f.read().splitlines()]
+
     with open(f"size distribution/{dataset} size distribution.txt") as f:
         S = [int(x) for x in f.read().splitlines()]
-    
+
     _, edge_index, _ = load_dataset(datasets['email-Eu'])
 
     model = Node2VecSLP(edge_index, 256, 1, aggregate="sum")
     model.load_state_dict(torch.load('deep_hyperlink_prediction/pretrained_models/node2vec_slp-email-Eu-sum.pt'))
 
-    H = hyper_pa(S, NP, n, 20, 0.5, model)
+    H = hyper_pa(S, NP, nodes, 20, 0.5, model)
     H = hnx.Hypergraph.from_bipartite(H)
+
+    end = datetime.now()
+
+    logging.info(f'Elapsed time: {end - begin}')
+    logging.info(f'Number of nodes: {H.number_of_nodes()}')
+
+    logging.debug('Writing output file')
+    
     with open('output_directory/output.txt', 'w') as f:
         for e in H.edges:
             nodes = sorted(H.edges[e])
             f.write(str(' ').join(map(str, nodes)) + '\n')
+    
+    logging.debug('Writing output.unique file')
+
+    hyperedges = []
+    with open('output_directory/output.unique.txt', 'w') as f:
+        for edge in H.edges:
+            nodes = sorted(H.edges[edge])
+            r = str(' ').join(map(str, nodes))
+            if r not in hyperedges:
+                hyperedges.append(r)
+                f.write(r + '\n')
+
     # Print the list of nodes in each hyperedge
 
 if __name__ == '__main__':

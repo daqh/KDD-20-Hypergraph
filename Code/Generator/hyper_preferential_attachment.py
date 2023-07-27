@@ -264,7 +264,7 @@ class hyper_preferential_attachment:
             self.degrees[i] = 1
         # write into file and update "degree" of edge
         for i in range(12):
-            f.write(str(24-i) + "\n")
+            f.write(str(i) + " " + str(24-i) + "\n")
             self.deg_list[0][str(i+1) + "," + str(24-i)] = 1
         # update degree in deg_list
         # From node 26-th onward, we will generate simplices based on preferential attachment
@@ -288,6 +288,7 @@ class hyper_preferential_attachment:
             for simplex in range(number_simplices):
                 chosen_size = np.random.choice(a = 25, size = 1, replace = False, p = size_distribution)
                 simplex_size = chosen_size[0] + 1
+                print(f's = {simplex_size}')
 
                 # Now, we need to pick (simplex_size - 1) nodes based on their degree in a hyper-graph "flavored" manner
 
@@ -308,6 +309,7 @@ class hyper_preferential_attachment:
                     chance = random.random()
 
                     if chance < self.randomness:                                                    # choose other (simplex_size - 1) nodes randomly
+                        print("randomly")
 
                         chosen_nodes = np.random.choice(a = self.size, size = simplex_size - 1, replace = False)
                         hyper_edge = chosen_nodes
@@ -330,6 +332,7 @@ class hyper_preferential_attachment:
 
 
                     else:                                                                           # choose other (simplex_size - 1) nodes based on Hyper PA rules
+                        print("hyper PA rules")
 
                         degrees = self.degrees[0:self.size]
                         # compute probability of being chosen, proportional to degree
@@ -337,6 +340,7 @@ class hyper_preferential_attachment:
                         number_chosen_nodes = min(simplex_size - 1, np.count_nonzero(probability))      # in case the number of nonzero entries is actually smaller than (simplex_size - 1)
 
                         if simplex_size == 2 or number_chosen_nodes == 1:                               # if simplex_size is 2, choose another node based on degree distribution
+                            print("simplex_size = 2 or number_chosen_nodes = 1")
                             # choose another random node with the probability computed above
                             chosen_nodes = np.random.choice(a = self.size, size = 1, replace = False, p = probability)
                             # the hyper_edge is our newly formed hyperedge, consisting of the new node and another node chosen randomly based on its degree
@@ -362,9 +366,11 @@ class hyper_preferential_attachment:
                             '''
 
                         else:                                                                                 # if we need to select >= 2 nodes
+                            print("simplex_size >= 3 and number_chosen_nodes >= 2")
                                                                                                               # we choose other simplex_size nodes based on the degree of the whole group
 
                             if len(self.deg_list[number_chosen_nodes - 2]) == 0:                              # no combination of (simplex_size - 1) appeared before in a simplex before
+                                print("no combination of (simplex_size - 1) appeared before in a simplex before")
                                                                                                               # we are obliged to choose random nodes, like the PA_ver2 model
                                 chosen_nodes = np.random.choice(a=self.size, size=number_chosen_nodes, replace=False, p=probability)
                                 # the hyper_edge is our newly formed hyperedge, consisting of the new node and another node chosen randomly based on its degree
@@ -386,6 +392,7 @@ class hyper_preferential_attachment:
                                 #self.update_group_degree(hyper_edge)
 
                             else:                                                                               # some combinations of (simplex_size - 1) appeared before in a simplex before
+                                print("some combinations of (simplex_size - 1) appeared before in a simplex before")
                                 # modified on 09-04, the nodes chosen must be 'correlated' (having intersection) with previously formed hyper_edges of this new node
                                 hyper_edge = self.choose_group(number_chosen_nodes, hyper_edges)
                                 # append the newly introduced node into our new hyperedge as well
