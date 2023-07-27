@@ -264,7 +264,7 @@ class hyper_preferential_attachment:
             self.degrees[i] = 1
         # write into file and update "degree" of edge
         for i in range(12):
-            f.write("a" + str(i + 1) + " a" + str(24-i) + "\n")
+            f.write(str(24-i) + "\n")
             self.deg_list[0][str(i+1) + "," + str(24-i)] = 1
         # update degree in deg_list
         # From node 26-th onward, we will generate simplices based on preferential attachment
@@ -281,8 +281,9 @@ class hyper_preferential_attachment:
                 number_simplices = self.k
 
             else:
-                sampled_number = np.random.choice(a = maximum_number + 1, size = 1, replace = False, p = distribution)
+                sampled_number = np.random.choice(a = maximum_number + 1, size = 1, replace = False, p = distribution) # k
                 number_simplices = sampled_number[0]
+                print(f'k = {number_simplices}')
 
             for simplex in range(number_simplices):
                 chosen_size = np.random.choice(a = 25, size = 1, replace = False, p = size_distribution)
@@ -293,7 +294,7 @@ class hyper_preferential_attachment:
                 # if new simplex has size only 1
                 if simplex_size == 1:
                     #self.degrees[node - 1] += 1                                                     # corresponding index of 'node' is 'node-1'
-                    f.write(str(node) + "b" + str(node) + "\n")                                                       # but when writing into a file, must be 'node'
+                    f.write(str(node) + "\n")                                                       # but when writing into a file, must be 'node'
                 # since simplices of size 1 generally do not affect our proposed properties, we want to form simplices of size at least 2 to see the properties
 
                     hyper_edge = []
@@ -316,7 +317,7 @@ class hyper_preferential_attachment:
                         # Increment the degree of each node in our new simplex by 1, write this newly formed hyper-edge into our file
                         for t in hyper_edge:
                             #self.degrees[t] += 1
-                            f.write(str(node) + "c" + str(t+1) + " ")
+                            f.write(str(t+1) + " ")
                         f.write("\n")
 
 
@@ -347,7 +348,7 @@ class hyper_preferential_attachment:
                             for t in hyper_edge:                                                             # in here, t is the corresponding index of the node 't+1'
                                 #self.degrees[t] += 1                                                          # so when using index, use 't'
                                 # write this newly formed hyper-edge into our file
-                                f.write(str(node) + "d" + str(t+1) + " ")                                                       # but when writing into file, must write 't+1'
+                                f.write(str(t+1) + " ")                                                       # but when writing into file, must write 't+1'
                             f.write("\n")
                             hyper_edge = np.array(hyper_edge) + 1
                             hyper_edges.append(hyper_edge)
@@ -376,7 +377,7 @@ class hyper_preferential_attachment:
                                 for t in hyper_edge:  # in here, t is the corresponding index of the node 't+1'
                                     #self.degrees[t] += 1  # so when using index, use 't'
                                     # write this newly formed hyper-edge into our file
-                                    f.write(str(node) + "e" + str(t + 1) + " ")  # but when writing into file, must write 't+1'
+                                    f.write(str(t + 1) + " ")  # but when writing into file, must write 't+1'
                                 f.write("\n")
                                 hyper_edge = np.array(hyper_edge) + 1
                                 hyper_edges.append(hyper_edge)
@@ -395,7 +396,7 @@ class hyper_preferential_attachment:
                                 for t in hyper_edge:  # in here, t is the number representing the node t
                                     #self.degrees[t - 1] += 1  # so when using index, use 't-1'
                                     # write this newly formed hyper-edge into our file
-                                    f.write(str(node) + "f" + str(t) + " ")  # but when writing into file, must write 't'
+                                    f.write(str(t) + " ")  # but when writing into file, must write 't'
                                 f.write("\n")
                                 hyper_edges.append(hyper_edge)
 
