@@ -264,7 +264,7 @@ class hyper_preferential_attachment:
             self.degrees[i] = 1
         # write into file and update "degree" of edge
         for i in range(12):
-            f.write(str(i) + " " + str(24-i) + "\n")
+            f.write(str(i + 1) + " " + str(24-i) + "\n")
             self.deg_list[0][str(i+1) + "," + str(24-i)] = 1
         # update degree in deg_list
         # From node 26-th onward, we will generate simplices based on preferential attachment
@@ -286,6 +286,7 @@ class hyper_preferential_attachment:
                 print(f'k = {number_simplices}')
 
             for simplex in range(number_simplices):
+                print('sampling simplex size')
                 chosen_size = np.random.choice(a = 25, size = 1, replace = False, p = size_distribution)
                 simplex_size = chosen_size[0] + 1
                 print(f's = {simplex_size}')
@@ -346,6 +347,7 @@ class hyper_preferential_attachment:
                             # the hyper_edge is our newly formed hyperedge, consisting of the new node and another node chosen randomly based on its degree
                             hyper_edge = chosen_nodes
                             hyper_edge = np.append(hyper_edge, node - 1)
+                            print('Sorting')
                             hyper_edge.sort()
 
                             # Increment the degree of each node in our new simplex by 1
@@ -356,6 +358,7 @@ class hyper_preferential_attachment:
                             f.write("\n")
                             hyper_edge = np.array(hyper_edge) + 1
                             hyper_edges.append(hyper_edge)
+                            print('Writed to file')
                             '''
                             # Increment the "degree" of the newly formed edge
                             edge_string = str(hyper_edge[0] + 1) +"," + str(hyper_edge[1] + 1)
@@ -376,6 +379,7 @@ class hyper_preferential_attachment:
                                 # the hyper_edge is our newly formed hyperedge, consisting of the new node and another node chosen randomly based on its degree
                                 hyper_edge = chosen_nodes
                                 hyper_edge = np.append(hyper_edge, node - 1)
+                                print('Sorting')
                                 hyper_edge.sort()
 
 
@@ -387,6 +391,7 @@ class hyper_preferential_attachment:
                                 f.write("\n")
                                 hyper_edge = np.array(hyper_edge) + 1
                                 hyper_edges.append(hyper_edge)
+                                print('Writed to file')
 
                                 # update "degrees" of all sub-groups of this newly-formed hyper-edge
                                 #self.update_group_degree(hyper_edge)
@@ -397,6 +402,7 @@ class hyper_preferential_attachment:
                                 hyper_edge = self.choose_group(number_chosen_nodes, hyper_edges)
                                 # append the newly introduced node into our new hyperedge as well
                                 hyper_edge.append(node)
+                                print('Sorting')
                                 hyper_edge.sort()
 
                                 # update node degree and write into file
@@ -406,14 +412,17 @@ class hyper_preferential_attachment:
                                     f.write(str(t) + " ")  # but when writing into file, must write 't'
                                 f.write("\n")
                                 hyper_edges.append(hyper_edge)
+                                print('Writed to file')
 
                                 # update "degrees" of ALL the sub-simplices
                                 #self.update_group_degree(hyper_edge)
             self.size += 1
             self.current_num_nodes += 1
 
+            print("updating degrees")
             for hyper_edge in hyper_edges:
                 self.update_group_degree(hyper_edge)
+            print("done updating degrees")
         f.close()
 
 def arg_parse():
@@ -470,6 +479,17 @@ def main():
     
     end = datetime.now()
     print("time elapsed: " + str(end - begin))
+
+    # Remove duplicates and write output.unique file
+    hyperedges = []
+    with open(prog_args.output_directory + "/" + prog_args.file_name + ".txt", "r") as edges_file:
+        with open(prog_args.output_directory + "/" + prog_args.file_name + ".unique.txt", "w") as unique_edges_file:
+            for line in edges_file:
+                nodes = sorted(line.split())
+                r = str(' ').join(map(str, nodes))
+                if r not in hyperedges:
+                    hyperedges.append(r)
+                    unique_edges_file.write(r + '\n')
 
 
 

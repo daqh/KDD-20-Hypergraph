@@ -12,7 +12,6 @@ from deep_hyperlink_prediction.models.node2vec_slp import Node2VecSLP
 from deep_hyperlink_prediction.utils import datasets, load_dataset
 import logging
 from datetime import datetime
-import itertools
 
 def hyper_pa(S: list[int], NP: list[int], n: int, trials: int, alpha: float, model: torch.nn.Module):
     '''Hypergraph Preferential Attachment
@@ -124,6 +123,9 @@ def main(args):
     model.load_state_dict(torch.load('deep_hyperlink_prediction/pretrained_models/node2vec_slp-email-Eu-sum.pt'))
 
     H = hyper_pa(S, NP, nodes, 20, 0.5, model)
+
+    logging.debug('Converting to hypergraph')
+
     H = hnx.Hypergraph.from_bipartite(H)
 
     end = datetime.now()
@@ -132,7 +134,8 @@ def main(args):
     logging.info(f'Number of nodes: {H.number_of_nodes()}')
 
     logging.debug('Writing output file')
-    
+
+    # Write output file
     with open('output_directory/output.txt', 'w') as f:
         for e in H.edges:
             nodes = sorted(H.edges[e])
@@ -140,6 +143,7 @@ def main(args):
     
     logging.debug('Writing output.unique file')
 
+    # Remove duplicates and write output.unique file
     hyperedges = []
     with open('output_directory/output.unique.txt', 'w') as f:
         for edge in H.edges:
@@ -148,8 +152,6 @@ def main(args):
             if r not in hyperedges:
                 hyperedges.append(r)
                 f.write(r + '\n')
-
-    # Print the list of nodes in each hyperedge
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Hypergraph Preferential Attachment')
