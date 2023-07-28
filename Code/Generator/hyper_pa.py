@@ -40,6 +40,7 @@ def hyper_pa(S: list[int], NP: list[int], n: int, trials: int, alpha: float, mod
         G.add_edges_from([(f'a{i + 1}', i + 1)])
 
     for i in  range(1, n + 1):
+        G_ = G.copy()
         logging.info(f'{i}/{n}')
         k = np.random.choice(a = len(NP), size = 1, replace=False, p = [x/sum(NP) for x in NP])[0] + 1 # Sample a number k from NP
         logging.debug(f'\tk = {k}')
@@ -48,12 +49,14 @@ def hyper_pa(S: list[int], NP: list[int], n: int, trials: int, alpha: float, mod
             logging.debug(f'\ts = {s}')
             if s == 1:
                 logging.debug(f'\tAdding hyperedge {i}')
-                G.add_node(i, bipartite=1)
-                G.add_node(f'c{i}', bipartite=0)
-                G.add_edge(i, f'c{i}') # Add the hyperedge {i} to G
+                G_.add_node(i, bipartite=1)
+                G_.add_node(f'c{i}', bipartite=0)
+                G_.add_edge(i, f'c{i}') # Add the hyperedge {i} to G
             # else if all (s-1)-sized groups have 0 degree then
             elif len({n for n, d in G.nodes(data=True) if d["bipartite"] == 1 and d != i}) < s - 1: # TODO: verifica correttezza
                 # ----------------- #
+                if alpha < 1:
+                    pass
                 # for t in range(trials):
                 # #     # Choose s-1 nodes randomly
                 # nodes = random.choices(range(1, n), k=s-1)
@@ -64,11 +67,13 @@ def hyper_pa(S: list[int], NP: list[int], n: int, trials: int, alpha: float, mod
                 nodes = random.choices(range(1, n), k=s-1)
                 nodes.append(i)
                 # Add the hyperedge of i and the s-1 nodes to G
-                G.add_nodes_from(nodes, bipartite=1)
-                G.add_node(f'c{i}-{j}', bipartite=0)
-                G.add_edges_from([(l, f'c{i}-{j}') for l in nodes])
+                G_.add_nodes_from(nodes, bipartite=1)
+                G_.add_node(f'c{i}-{j}', bipartite=0)
+                G_.add_edges_from([(l, f'c{i}-{j}') for l in nodes])
             else:
                 # ----------------- #
+                if alpha < 1:
+                    pass
                 # top_nodes = {n for n, d in G.nodes(data=True) if d["bipartite"] == 1 and d != i}
                 # if i in top_nodes:
                 #     top_nodes.remove(i)
@@ -96,9 +101,10 @@ def hyper_pa(S: list[int], NP: list[int], n: int, trials: int, alpha: float, mod
                 nodes = random.choices(list(top_nodes), weights=[G.degree[i] for i in top_nodes], k=s-1)
                 nodes.append(i)
                 # Add the hyperedge of i and the s-1 nodes to G
-                G.add_nodes_from(nodes, bipartite=1)
-                G.add_node(f'c{i}-{j}', bipartite=0)
-                G.add_edges_from([(l, f'c{i}-{j}') for l in nodes])
+                G_.add_nodes_from(nodes, bipartite=1)
+                G_.add_node(f'c{i}-{j}', bipartite=0)
+                G_.add_edges_from([(l, f'c{i}-{j}') for l in nodes])
+        G = G_
     return G
 
 def main(args):
